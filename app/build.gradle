@@ -1,0 +1,158 @@
+apply plugin: 'android-sdk-manager'
+apply plugin: 'com.android.application'
+apply plugin: 'com.neenbedankt.android-apt'
+apply plugin: 'me.tatarka.retrolambda'
+
+
+// Code to calculate the version numbers directly from Git tags.
+// NOTE: Make sure there's at least one git tag in the repository
+// before making builds.
+def getVersionCode = { ->
+    try {
+        def code = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'tag', '--list'
+            standardOutput = code
+        }
+        return code.toString().split("\n").size()
+    }
+    catch (ignored) {
+        return -1;
+    }
+}
+
+def getVersionName = { ->
+    try {
+        def stdout = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'describe', '--match=[^(hudson)].*', '--tags', '--dirty'
+            standardOutput = stdout
+        }
+        return stdout.toString().trim()
+    }
+    catch (ignored) {
+        return null;
+    }
+}
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.2"
+
+    defaultConfig {
+        applicationId "com.robotsandpencils.androidtemplate"
+        minSdkVersion 16
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+        versionName getVersionName()
+        versionCode getVersionCode()
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        setProperty("archivesBaseName", "androidtemplate")
+    }
+
+    dataBinding {
+        enabled = true
+    }
+
+    signingConfigs {
+        debug {
+            storeFile file("debug-key.keystore.jks")
+            storePassword "abc123"
+            keyAlias "android"
+            keyPassword "abc123"
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
+
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    productFlavors {
+        staging {
+            buildConfigField 'boolean', 'STAGING', 'true'
+            buildConfigField 'boolean', 'PRODUCTION', 'false'
+            signingConfig signingConfigs.debug
+        }
+        production {
+            buildConfigField 'boolean', 'STAGING', 'false'
+            buildConfigField 'boolean', 'PRODUCTION', 'true'
+
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    dexOptions {
+        javaMaxHeapSize "4g"
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile "com.android.support:appcompat-v7:$supportLibraryVersion"
+    compile "com.android.support:design:$supportLibraryVersion"
+    compile "com.android.support:recyclerview-v7:$supportLibraryVersion"
+    compile "com.android.support:customtabs:$supportLibraryVersion"
+
+    // REST
+    compile "com.squareup.retrofit2:retrofit:$retrofitVersion"
+    compile "com.squareup.retrofit2:converter-gson:$retrofitVersion"
+    compile "com.squareup.retrofit2:adapter-rxjava:$retrofitVersion"
+    compile 'com.squareup.okhttp3:logging-interceptor:3.2.0'
+
+    // Rx
+    compile 'io.reactivex:rxjava:1.1.1'
+    compile 'io.reactivex:rxandroid:1.1.0'
+    compile 'com.trello:rxlifecycle:0.5.0'
+    compile 'com.trello:rxlifecycle-components:0.5.0'
+    compile 'com.minimize.android:rxrecycler-adapter:1.2.1'
+
+    // Dagger 2
+    compile "com.google.dagger:dagger:$daggerVersion"
+    apt "com.google.dagger:dagger-compiler:$daggerVersion"
+    provided 'org.glassfish:javax.annotation:10.0-b28'
+
+    // Event bus
+    compile 'com.squareup:otto:1.3.8'
+
+    // Database
+    compile 'io.realm:realm-android:0.87.5'
+
+    // Fonts
+    compile 'uk.co.chrisjenx:calligraphy:2.1.0'
+
+    // Logging
+    compile 'com.jakewharton.timber:timber:4.1.0'
+
+    // Unit testing
+    testCompile 'junit:junit:4.12'
+
+    // Espresso Testing
+    androidTestCompile 'junit:junit:4.12'
+    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2'
+    androidTestCompile 'com.android.support.test:runner:0.5'
+
+    // Debugging and Leak Detection
+    debugCompile "com.facebook.stetho:stetho:$stethoVersion"
+    debugCompile "com.facebook.stetho:stetho-okhttp3:$stethoVersion"
+
+    // Debug Mock Web Server
+    debugCompile "com.squareup.okhttp3:mockwebserver:3.2.0"
+}
+
+configurations.all {
+    resolutionStrategy.force "com.android.support:support-annotations:$supportLibraryVersion"
+    resolutionStrategy.force "junit:junit:4.12"
+}
+
