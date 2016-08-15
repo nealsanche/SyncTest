@@ -6,6 +6,8 @@ import com.robotsandpencils.androidtemplate.managers.DataManager;
 import com.robotsandpencils.androidtemplate.net.BelterraAPI;
 import com.squareup.otto.Bus;
 
+import javax.inject.Singleton;
+
 import dagger.Module;
 import dagger.Provides;
 import io.realm.Realm;
@@ -18,26 +20,26 @@ import retrofit2.Retrofit;
 @Module
 public class UserModule {
 
-    @UserScope
+    @Singleton
     @Provides
     BelterraAPI getServerAPI(Retrofit retrofit) {
         return retrofit.create(BelterraAPI.class);
     }
 
-    @UserScope
+    @Singleton
     @Provides
     DataManager getDataManager(App context, BelterraAPI api, RealmConfiguration realmConfiguration, Bus bus) {
         return new DataManager(context, api, realmConfiguration, bus);
     }
 
-    @UserScope
+    @Singleton
     @Provides
     Bus getBus() {
         return new Bus();
     }
 
+    @Singleton
     @Provides
-    @UserScope
     RealmConfiguration provideRealmConfiguration(App app) {
         return new RealmConfiguration.Builder(app)
                 .deleteRealmIfMigrationNeeded()
@@ -45,13 +47,14 @@ public class UserModule {
                 .build();
     }
 
+    @Singleton
     @Provides
     Realm provideRealm(RealmConfiguration realmConfiguration) {
         return Realm.getInstance(realmConfiguration);
     }
 
+    @Singleton
     @Provides
-    @UserScope
     ActionManager provideActionManager() {
         return new ActionManager();
     }

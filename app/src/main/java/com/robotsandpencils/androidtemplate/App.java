@@ -3,14 +3,10 @@ package com.robotsandpencils.androidtemplate;
 import android.app.Application;
 
 import com.robotsandpencils.androidtemplate.managers.MockWebManager;
-import com.robotsandpencils.androidtemplate.modules.AppModule;
-import com.robotsandpencils.androidtemplate.modules.DaggerNetComponent;
 import com.robotsandpencils.androidtemplate.modules.DaggerUserComponent;
-import com.robotsandpencils.androidtemplate.modules.NetComponent;
 import com.robotsandpencils.androidtemplate.modules.NetModule;
 import com.robotsandpencils.androidtemplate.modules.UserComponent;
 import com.robotsandpencils.androidtemplate.modules.UserModule;
-import com.robotsandpencils.androidtemplate.util.StethoHelper;
 
 /**
  * Created by nealsanche on 2016-03-16.
@@ -32,17 +28,11 @@ public class App extends Application {
         }
 
         if (mUserComponent == null) {
-            NetComponent netComponent = DaggerNetComponent.builder()
-                    .appModule(new AppModule(this))
+            mUserComponent = DaggerUserComponent.builder()
+                    .userModule(new UserModule())
                     .netModule(new NetModule(this, getNetworkEndpoint()))
                     .build();
-            mUserComponent = DaggerUserComponent.builder()
-                    .netComponent(netComponent)
-                    .userModule(new UserModule())
-                    .build();
         }
-
-        StethoHelper.initializeStetho(this);
 
         mUserComponent.inject(this);
     }

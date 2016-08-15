@@ -1,8 +1,7 @@
 package com.robotsandpencils.androidtemplate.modules;
 
-import android.content.Context;
-
-import com.robotsandpencils.androidtemplate.util.StethoHelper;
+import com.robotsandpencils.androidtemplate.App;
+import com.robotsandpencils.androidtemplate.managers.PreferencesManager;
 
 import javax.inject.Singleton;
 
@@ -22,12 +21,25 @@ import retrofit2.converter.gson.GsonConverterFactory;
  */
 @Module
 public class NetModule {
-    private final Context mContext;
     private final String mNetworkEndpoint;
 
-    public NetModule(Context context, String networkEndpoint) {
-        mContext = context;
+    private final App mApp;
+
+    public NetModule(App context, String networkEndpoint) {
+        mApp = context;
         mNetworkEndpoint = networkEndpoint;
+    }
+
+    @Provides
+    @Singleton
+    PreferencesManager providePreferencesManager(App context) {
+        return new PreferencesManager(context);
+    }
+
+    @Singleton
+    @Provides
+    App provideApp() {
+        return mApp;
     }
 
     @Singleton
@@ -35,7 +47,7 @@ public class NetModule {
     public OkHttpClient provideOkHttpClient() {
         // Set up some caching
         int cacheSize = 10 * 1024 * 1024; // 10 MiB
-        Cache cache = new Cache(mContext.getCacheDir(), cacheSize);
+        Cache cache = new Cache(mApp.getCacheDir(), cacheSize);
 
         // Set up some logging
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
@@ -44,7 +56,6 @@ public class NetModule {
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .cache(cache)
                 .addInterceptor(interceptor)
-                .addNetworkInterceptor(StethoHelper.getStethoInterceptor())
                 .build();
 
         return okHttpClient;

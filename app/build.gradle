@@ -36,13 +36,13 @@ def getVersionName = { ->
 }
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    compileSdkVersion 24
+    buildToolsVersion "24.0.1"
 
     defaultConfig {
         applicationId "com.robotsandpencils.androidtemplate"
         minSdkVersion 16
-        targetSdkVersion 23
+        targetSdkVersion 24
         versionCode 1
         versionName "1.0"
         versionName getVersionName()
@@ -81,7 +81,6 @@ android {
             buildConfigField 'boolean', 'STAGING', 'false'
             buildConfigField 'boolean', 'PRODUCTION', 'false'
             signingConfig signingConfigs.debug
-            minSdkVersion 21 // Pin to 21 to help with instant run
         }
         staging {
             buildConfigField 'boolean', 'DEVELOPMENT', 'false'
@@ -118,13 +117,13 @@ dependencies {
     compile "com.squareup.retrofit2:retrofit:$retrofitVersion"
     compile "com.squareup.retrofit2:converter-gson:$retrofitVersion"
     compile "com.squareup.retrofit2:adapter-rxjava:$retrofitVersion"
-    compile 'com.squareup.okhttp3:logging-interceptor:3.2.0'
+    compile 'com.squareup.okhttp3:logging-interceptor:3.4.1'
 
     // Rx
-    compile 'io.reactivex:rxjava:1.1.1'
-    compile 'io.reactivex:rxandroid:1.1.0'
-    compile 'com.trello:rxlifecycle:0.5.0'
-    compile 'com.trello:rxlifecycle-components:0.5.0'
+    compile 'io.reactivex:rxjava:1.1.9'
+    compile 'io.reactivex:rxandroid:1.2.0'
+    compile 'com.trello:rxlifecycle:0.6.1'
+    compile 'com.trello:rxlifecycle-components:0.6.1'
     compile 'com.minimize.android:rxrecycler-adapter:1.2.1'
 
     // Dagger 2
@@ -152,14 +151,10 @@ dependencies {
     androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2'
     androidTestCompile 'com.android.support.test:runner:0.5'
 
-    // Debugging and Leak Detection
-    debugCompile "com.facebook.stetho:stetho:$stethoVersion"
-    debugCompile "com.facebook.stetho:stetho-okhttp3:$stethoVersion"
-
     // Debug Mock Web Server
     debugCompile "com.squareup.okhttp3:mockwebserver:3.2.0"
 
-    // Fixes a problem with Databinding and Dagger 2.4
+    // Fixes a problem with Databinding and Dagger 2.6
     apt 'com.google.guava:guava:19.0'
 }
 
