@@ -1,6 +1,7 @@
 apply plugin: 'android-sdk-manager'
 apply plugin: 'com.android.application'
 apply plugin: 'com.neenbedankt.android-apt'
+apply plugin: 'realm-android'
 apply plugin: 'me.tatarka.retrolambda'
 
 
@@ -134,9 +135,6 @@ dependencies {
     // Event bus
     compile 'com.squareup:otto:1.3.8'
 
-    // Database
-    compile 'io.realm:realm-android:0.87.5'
-
     // Fonts
     compile 'uk.co.chrisjenx:calligraphy:2.1.0'
 
@@ -147,9 +145,19 @@ dependencies {
     testCompile 'junit:junit:4.12'
 
     // Espresso Testing
-    androidTestCompile 'junit:junit:4.12'
-    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2'
+    androidTestApt "com.google.dagger:dagger-compiler:$daggerVersion"
+    androidTestCompile "com.github.crittercism.dexmaker:dexmaker-parent:$dexmakerVersion"
+    androidTestCompile "com.github.crittercism.dexmaker:dexmaker-mockito:$dexmakerVersion"
+    androidTestCompile "com.github.crittercism.dexmaker:dexmaker-dx:$dexmakerVersion"
+    androidTestCompile "com.github.crittercism.dexmaker:dexmaker:$dexmakerVersion"
+    androidTestCompile 'org.mockito:mockito-core:1.10.19'
     androidTestCompile 'com.android.support.test:runner:0.5'
+    androidTestCompile 'com.android.support.test:rules:0.5'
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2') {
+        exclude group: 'javax.inject', module: 'javax.inject'
+        exclude group: 'com.squareup', module: 'javawriter'
+    }
+    androidTestCompile 'com.github.fabioCollini:DaggerMock:0.6'
 
     // Debug Mock Web Server
     debugCompile "com.squareup.okhttp3:mockwebserver:3.2.0"
@@ -160,6 +168,26 @@ dependencies {
 
 configurations.all {
     resolutionStrategy.force "com.android.support:support-annotations:$supportLibraryVersion"
+    resolutionStrategy.force "com.google.dagger:dagger:$daggerVersion"
     resolutionStrategy.force "junit:junit:4.12"
 }
 
+/*
+ * Workaround for https://code.google.com/p/android/issues/detail?id=182715
+ *
+ * The Android Gradle plugin is creating DataBindingExportBuildInfoTasks for the instrumentation
+ * APK that generates from the app APKs layouts. This creates duplicate classes in the app and
+ * instrumentation APK which leads to
+ *      java.lang.IllegalAccessError: Class ref in pre-verified class resolved to unexpected implementation
+ * on older devices.
+ *
+ * The workaround is to get the DataBindingExportBuildInfoTasks tasks for the instrumentation APK
+ * and delete the files right after it creates them.
+ */
+tasks.withType(com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask) { task ->
+    if (task.name.endsWith("AndroidTest")) {
+        task.finalizedBy(tasks.create("${task.name}Workaround") << {
+            task.output.deleteDir()
+        })
+    }
+}

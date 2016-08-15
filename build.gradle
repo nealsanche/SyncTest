@@ -9,15 +9,12 @@ buildscript {
         classpath 'com.android.tools.build:gradle:2.2.0-beta1'
         classpath 'me.tatarka:gradle-retrolambda:3.3.0-beta4'
         classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
-        classpath 'me.tatarka.retrolambda.projectlombok:lombok.ast:0.2.3.a2'
         classpath 'com.github.JakeWharton:sdk-manager-plugin:1d07987217120fffdc0ce1291d73e974310d7d92'
+        classpath 'io.realm:realm-gradle-plugin:1.1.1'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
-
-    // Exclude the version that the android plugin depends on.
-    configurations.classpath.exclude group: 'com.android.tools.external.lombok'
 }
 
 allprojects {
@@ -37,5 +34,6 @@ ext {
     supportLibraryVersion = '24.1.1'
     daggerVersion = '2.6'
     retrofitVersion = '2.1.0'
+    dexmakerVersion = 'f8e7c23e4172af8767758c99c9165dd2bd4f0e7f'
 }
 

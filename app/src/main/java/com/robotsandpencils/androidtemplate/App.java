@@ -8,15 +8,14 @@ import com.robotsandpencils.androidtemplate.modules.NetModule;
 import com.robotsandpencils.androidtemplate.modules.UserComponent;
 import com.robotsandpencils.androidtemplate.modules.UserModule;
 
+import timber.log.Timber;
+
 /**
  * Created by nealsanche on 2016-03-16.
  */
 public class App extends Application {
 
-    private static final String TAG = "App";
-
     private UserComponent mUserComponent;
-
     private MockWebManager mMockWebManager;
 
     @Override
@@ -35,6 +34,11 @@ public class App extends Application {
         }
 
         mUserComponent.inject(this);
+
+        if (BuildConfig.DEBUG) {
+            Timber.plant(new Timber.DebugTree());
+        }
+
     }
 
     private String getNetworkEndpoint() {

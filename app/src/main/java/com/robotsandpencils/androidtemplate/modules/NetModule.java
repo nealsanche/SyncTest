@@ -32,13 +32,13 @@ public class NetModule {
 
     @Provides
     @Singleton
-    PreferencesManager providePreferencesManager(App context) {
+    public PreferencesManager providePreferencesManager(App context) {
         return new PreferencesManager(context);
     }
 
     @Singleton
     @Provides
-    App provideApp() {
+    public App provideApp() {
         return mApp;
     }
 
@@ -53,12 +53,10 @@ public class NetModule {
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+        return new OkHttpClient.Builder()
                 .cache(cache)
                 .addInterceptor(interceptor)
                 .build();
-
-        return okHttpClient;
     }
 
     @Singleton
