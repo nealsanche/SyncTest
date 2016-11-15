@@ -6,8 +6,12 @@
 
     <data>
         <variable
-            name="title_text"
+            name="titleText"
             type="String"/>
+
+        <variable
+            name="presenter"
+            type="com.robotsandpencils.synctest.activities.DashboardActivity"/>
 
     </data>
     <RelativeLayout
@@ -24,6 +28,13 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@{title_text}"/>
+            android:text="@{titleText}"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="Test Message Access"
+            android:onClick="@{presenter::onTestClick}"/>
     </RelativeLayout>
 </layout>

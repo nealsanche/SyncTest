@@ -1,9 +1,12 @@
 package com.robotsandpencils.synctest.net;
 
+import com.robotsandpencils.synctest.model.Message;
 import com.robotsandpencils.synctest.model.Version;
 
 import retrofit2.Response;
+import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.POST;
 import rx.Observable;
 
 /**
@@ -18,4 +21,7 @@ public interface RemoteAPI {
 
     @GET("check/version")
     Observable<Version> getVersion();
+
+    @POST("sync/message")
+    Observable<Message> syncMessage(@Body Message message);
 }

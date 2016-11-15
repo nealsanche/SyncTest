@@ -3,6 +3,7 @@ package com.robotsandpencils.synctest.modules;
 import com.robotsandpencils.synctest.App;
 import com.robotsandpencils.synctest.activities.DashboardActivity;
 import com.robotsandpencils.synctest.managers.DataManager;
+import com.robotsandpencils.synctest.managers.DebugWebDispatcher;
 
 import javax.inject.Singleton;
 
@@ -22,4 +23,6 @@ public interface UserComponent {
 
     void inject(DataManager dataManager);
     void inject(DashboardActivity dashboardActivity);
+
+    void inject(DebugWebDispatcher debugWebDispatcher);
 }

@@ -11,18 +11,26 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import com.robotsandpencils.synctest.App;
 import com.robotsandpencils.synctest.R;
 import com.robotsandpencils.synctest.databinding.ActivityDashboardBinding;
 import com.robotsandpencils.synctest.managers.DataManager;
+import com.robotsandpencils.synctest.model.Message;
+import com.robotsandpencils.synctest.net.RemoteAPI;
 import com.trello.rxlifecycle.ActivityEvent;
+
+import java.util.Date;
 
 import javax.inject.Inject;
 
+import io.realm.Realm;
+import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
+import timber.log.Timber;
 
 public class DashboardActivity extends BaseActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -31,6 +39,13 @@ public class DashboardActivity extends BaseActivity
 
     @Inject
     DataManager mDataManager;
+
+    @Inject
+    Realm mRealm;
+
+    @Inject
+    RemoteAPI mRemoteAPI;
+    private Message mManagedMessage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,8 +62,12 @@ public class DashboardActivity extends BaseActivity
         setSupportActionBar(toolbar);
 
         FloatingActionButton fab = mBinding.appBarInclude.fab;
-        fab.setOnClickListener(view -> Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show());
+        fab.setOnClickListener(view -> {
+            Snackbar.make(view, "Performing test", Snackbar.LENGTH_LONG)
+                    .show();
+
+            performTest();
+        });
 
         DrawerLayout drawer = mBinding.drawerLayout;
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -58,6 +77,59 @@ public class DashboardActivity extends BaseActivity
         mBinding.navView.setNavigationItemSelectedListener(this);
 
         mBinding.appBarInclude.content.setTitleText("Welcome");
+
+        // Empty the realm out initially
+        mRealm.executeTransaction(realm -> {
+            realm.deleteAll();
+        });
+    }
+
+    private void performTest() {
+        Message message = new Message();
+        message.setDate(new Date());
+        message.setNew(true);
+        message.setTo("neal@nsdev.org");
+        message.setId(new Date().getTime());
+        message.setSubject("Testing this thing.");
+        message.setMesage("The message is to be kept secret at all costs. Never tell Trump.");
+        mRealm.executeTransaction(realm -> {
+            realm.copyToRealm(message);
+        });
+
+        // Find the message in our database
+        mManagedMessage = mRealm.where(Message.class).equalTo("id", message.getId()).findFirst();
+
+        mManagedMessage.addChangeListener(element -> {
+            Timber.d("Message changed: %s", mManagedMessage.isValid());
+        });
+        syncMessage(mManagedMessage);
+    }
+
+    private void syncMessage(final Message message) {
+        Timber.i("Syncing message: %s", message.getId());
+
+        // Need to copy from realm, otherwise network call fails with
+        // java.lang.IllegalStateException: Realm access from incorrect thread. Realm objects can only be accessed on the thread they were created.
+        Observable<Message> messageObservable = mRemoteAPI.syncMessage(mRealm.copyFromRealm(message))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+
+        messageObservable.subscribe(message1 -> {
+
+            Timber.i("Got a message back from the sync post: %s", message1.getId());
+
+            if (message.isNew()) {
+                // Delete the old message and replace it with the new one
+                mRealm.executeTransaction(realm -> {
+                    message.deleteFromRealm();
+                    mManagedMessage = realm.copyToRealmOrUpdate(message1);
+                });
+            }
+
+        }, error -> {
+            Timber.e(error, "Error during sync!");
+        });
+
     }
 
     @Override
@@ -73,6 +145,7 @@ public class DashboardActivity extends BaseActivity
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(version -> {
                             mBinding.appBarInclude.content.setTitleText(String.format("Version: %s", version.version));
+                            mBinding.appBarInclude.content.setPresenter(this);
                         },
                         error -> {
                             Toast.makeText(DashboardActivity.this, "Network Error: " + error.getMessage(), Toast.LENGTH_LONG)
@@ -133,5 +206,19 @@ public class DashboardActivity extends BaseActivity
 
         mBinding.drawerLayout.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public void onTestClick(View view) {
+        Timber.d("Test clicked.");
+        if (mManagedMessage != null) {
+            if (mManagedMessage.isValid()) {
+                Snackbar.make(view, "Managed Message Id: " + mManagedMessage.getId(), Snackbar.LENGTH_LONG)
+                        .show();
+            } else {
+                Snackbar.make(view, "Message has been deleted.", Snackbar.LENGTH_LONG)
+                        .show();
+            }
+
+        }
     }
 }
