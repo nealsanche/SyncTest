@@ -14,10 +14,18 @@ import io.realm.annotations.PrimaryKey;
 
 public class Message extends RealmObject implements CanBeNew {
 
+    // This is the server's primary key. Never modify this on the
+    // app.
     @SerializedName("id")
-    @PrimaryKey
     @Expose
     private long id;
+
+    // To the Server, this JSON element is the
+    // remote_id, but on the app, it is the actual primary key.
+    @SerializedName("remote_id")
+    @PrimaryKey
+    @Expose
+    private String localId;
 
     @SerializedName("date")
     @Expose
@@ -84,5 +92,13 @@ public class Message extends RealmObject implements CanBeNew {
     @Override
     public boolean isNew() {
         return isNew;
+    }
+
+    public String getLocalId() {
+        return localId;
+    }
+
+    public void setLocalId(String localId) {
+        this.localId = localId;
     }
 }

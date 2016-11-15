@@ -23,6 +23,7 @@ import com.robotsandpencils.synctest.net.RemoteAPI;
 import com.trello.rxlifecycle.ActivityEvent;
 
 import java.util.Date;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -86,21 +87,26 @@ public class DashboardActivity extends BaseActivity
 
     private void performTest() {
         Message message = new Message();
+        message.setLocalId(UUID.randomUUID().toString());
         message.setDate(new Date());
         message.setNew(true);
         message.setTo("neal@nsdev.org");
-        message.setId(new Date().getTime());
         message.setSubject("Testing this thing.");
         message.setMesage("The message is to be kept secret at all costs. Never tell Trump.");
         mRealm.executeTransaction(realm -> {
             realm.copyToRealm(message);
         });
 
+        if (mManagedMessage != null) {
+            mManagedMessage.removeChangeListeners();
+        }
+
         // Find the message in our database
         mManagedMessage = mRealm.where(Message.class).equalTo("id", message.getId()).findFirst();
 
         mManagedMessage.addChangeListener(element -> {
-            Timber.d("Message changed: %s", mManagedMessage.isValid());
+            Timber.d("Message changed: %s %s %s", mManagedMessage.isValid(),
+                    mManagedMessage.getId(), mManagedMessage.getLocalId());
         });
         syncMessage(mManagedMessage);
     }
@@ -121,8 +127,12 @@ public class DashboardActivity extends BaseActivity
             if (message.isNew()) {
                 // Delete the old message and replace it with the new one
                 mRealm.executeTransaction(realm -> {
-                    message.deleteFromRealm();
-                    mManagedMessage = realm.copyToRealmOrUpdate(message1);
+                    realm.copyToRealmOrUpdate(message1);
+
+                    //message.deleteFromRealm();
+
+                    // Not Resetting the managed message here.
+                    //mManagedMessage = realm.copyToRealmOrUpdate(message1);
                 });
             }
 
